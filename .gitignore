@@ -1,0 +1,13 @@
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+/.build
+.idea/
+.vscode/
+/Packages
+/*.xcodeproj
+xcuserdata/
+/**/GoogleService-Info.plist
+**/google-services.json
