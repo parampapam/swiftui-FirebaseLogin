@@ -8,7 +8,9 @@
 import SwiftUI
 import Firebase
 
-struct LoginView: View {
+struct LoginWithEmailAndPasswordView: View {
+    @EnvironmentObject private var userProfile: UserProfile
+    
     @State private var email = ""
     @State private var password = ""
     @State private var showAlert = false
@@ -34,12 +36,11 @@ struct LoginView: View {
     }
     
     func login() {
-        Auth.auth().signIn(withEmail: email, password: password) { (result, error) in
+
+        userProfile.signIn(withEmail: email, password: password) { error in
             if error != nil {
                 showAlert = true
                 alertMessage = error?.localizedDescription ?? ""
-            } else {
-                signedIn = true
             }
         }
     }
@@ -47,6 +48,6 @@ struct LoginView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        LoginView()
+        LoginWithEmailAndPasswordView()
     }
 }

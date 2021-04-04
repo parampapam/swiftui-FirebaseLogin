@@ -10,13 +10,22 @@ class UserProfile: ObservableObject {
     @Published private(set) var signedIn: Bool = false
        
     var userDisplayName: String? {
-        Auth.auth().currentUser?.email
+        auth.currentUser?.displayName ?? auth.currentUser?.email
     }
     
     private var auth: Auth
     private var handler: AuthStateDidChangeListenerHandle?
     
-    func refresh(user: User?) {
+    init() {
+        FirebaseApp.configure()
+        auth = Auth.auth()
+        
+        // Set login and logout handler for refreshes user data
+        handler = auth.addStateDidChangeListener { (auth, user) in  self.refresh(user: user) }
+    }
+    
+    // Refreshes user data after login or logout
+    private func refresh(user: User?) {
         if user != nil {
             signedIn = true
         } else {
@@ -24,6 +33,7 @@ class UserProfile: ObservableObject {
         }
     }
     
+    // User logout
     func signOut() {
         do {
             try auth.signOut()
@@ -32,16 +42,10 @@ class UserProfile: ObservableObject {
         }
     }
     
-    init() {
-        FirebaseApp.configure()
-        
-        auth = Auth.auth()
-        handler = auth.addStateDidChangeListener { (auth, user) in  self.refresh(user: user) }
+    // User login with email and password
+    func signIn(withEmail: String, password: String, completion: @escaping (Error?) -> Void) {
+        auth.signIn(withEmail: withEmail, password: password) { ( _, error) in
+            completion(error)
+        }
     }
-    
-    
-    
-//    func stateChangeHandler(auth: Auth, user User?) {
-//
-//    }
 }

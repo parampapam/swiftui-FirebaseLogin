@@ -9,5 +9,5 @@ Thumbs.db
 /Packages
 /*.xcodeproj
 xcuserdata/
-/**/GoogleService-Info.plist
+**/GoogleService-Info.plist
 **/google-services.json

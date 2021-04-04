@@ -6,17 +6,11 @@
 //
 
 import SwiftUI
-//import Firebase
 
 @main
 struct FirebaseLoginApp: App {
 
     @StateObject var userProfile = UserProfile()
-
-//    init() {
-//        FirebaseApp.configure()
-//        userProfile = UserProfile()
-//    }
 
     var body: some Scene {
         WindowGroup {

@@ -16,7 +16,7 @@ struct MainView: View {
         if userProfile.signedIn {
             UserView()
         } else {
-            LoginView()
+            LoginWithEmailAndPasswordView()
         }
     }
 }
