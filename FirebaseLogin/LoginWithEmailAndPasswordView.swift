@@ -13,41 +13,38 @@ struct LoginWithEmailAndPasswordView: View {
     
     @State private var email = ""
     @State private var password = ""
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-    @State private var signedIn = false
+    @Binding var alertItem: AlertItem?
     
     var body: some View {
         VStack {
-            if !signedIn {
-                TextField("Email", text: $email)
-                SecureField("Password", text: $password)
-                Button(action: { login() }) {
-                    Text("Sign in")
-                }
-            } else {
-                Text("You are Signed In")
+            TextField("Email", text: $email)
+                .padding(6)
+                .border(Color.gray.opacity(0.2))
+            
+            SecureField("Password", text: $password)
+                .padding(6)
+                .border(Color.gray.opacity(0.2))
+                .padding(.bottom)
+            
+            Button(action: { login() }) {
+                Text("Sign in")
             }
         }
         .padding()
-        .alert(isPresented: $showAlert) {
-            Alert(title: Text("Ошибка"), message: Text(alertMessage), dismissButton: .default(Text("Close")))
-        }
     }
     
     func login() {
-
         userProfile.signIn(withEmail: email, password: password) { error in
-            if error != nil {
-                showAlert = true
-                alertMessage = error?.localizedDescription ?? ""
+            if let error = error {
+                alertItem = AlertItem(title: "Error", message: error.localizedDescription)
             }
         }
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct LoginWithEmailAndPasswordView_Previews: PreviewProvider {
+
     static var previews: some View {
-        LoginWithEmailAndPasswordView()
+        LoginWithEmailAndPasswordView(alertItem: Binding.constant(AlertItem(title: "", message: "")))
     }
 }
