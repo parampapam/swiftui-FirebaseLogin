@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct UserView: View {
-    
+
     @EnvironmentObject private var userProfile: UserProfile
-    
+
     var body: some View {
         VStack {
             Text("Current user:")
             Text("\(userProfile.userDisplayName ?? "")")
-            Button(action: { userProfile.signOut() } ){
+            Button(action: { userProfile.signOut() }) {
                 Text("Sign Out")
             }
             .padding(.top)

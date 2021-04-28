@@ -10,29 +10,29 @@ import Firebase
 
 struct LoginWithEmailAndPasswordView: View {
     @EnvironmentObject private var userProfile: UserProfile
-    
+
     @State private var email = ""
     @State private var password = ""
     @Binding var alertItem: AlertItem?
-    
+
     var body: some View {
         VStack {
             TextField("Email", text: $email)
                 .padding(6)
                 .border(Color.gray.opacity(0.2))
-            
+
             SecureField("Password", text: $password)
                 .padding(6)
                 .border(Color.gray.opacity(0.2))
                 .padding(.bottom)
-            
+
             Button(action: { login() }) {
                 Text("Sign in")
             }
         }
         .padding()
     }
-    
+
     func login() {
         userProfile.signIn(withEmail: email, password: password) { error in
             if let error = error {

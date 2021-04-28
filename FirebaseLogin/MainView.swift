@@ -9,31 +9,36 @@
 import SwiftUI
 
 struct MainView: View {
-    
+
     @EnvironmentObject private var userProfile: UserProfile
     @State private var alertItem: AlertItem?
-    
+
     var body: some View {
-        if userProfile.signedIn{
+        if userProfile.signedIn {
             UserView()
         } else {
             NavigationView {
                 VStack {
                     Text("Sign in")
                         .padding(.bottom, 16)
-                    
-                    NavigationLink(destination: LoginWithEmailAndPasswordView(alertItem: $alertItem)){
+
+                    NavigationLink(destination: LoginWithEmailAndPasswordView(alertItem: $alertItem)) {
                         Text("Email & Password")
                             .padding(8)
                     }
-                    
-                    NavigationLink(destination: LoginWithEmailLink(alertItem: $alertItem)){
+
+                    NavigationLink(destination: LoginWithEmailLink(alertItem: $alertItem)) {
                         Text("Email Link")
                             .padding(8)
                     }
+
+                    NavigationLink(destination: LoginWithApple()) {
+                        Text("With Apple")
+                                .padding(8)
+                    }
                 }
             }
-            .onOpenURL{ url in
+            .onOpenURL { url in
                 userProfile.signIn(url: url) { error in
                     if let error = error {
                         alertItem = AlertItem(title: "Error", message: error.localizedDescription)
@@ -52,7 +57,7 @@ class MainView_Previews: PreviewProvider {
         MainView()
             .environmentObject(UserProfile())
     }
-    
+
     #if DEBUG
     @objc class func injected() {
         UIApplication.shared.windows.first?.rootViewController =

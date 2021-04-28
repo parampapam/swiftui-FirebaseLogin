@@ -9,24 +9,24 @@ import SwiftUI
 
 struct LoginWithEmailLink: View {
     @EnvironmentObject private var userProfile: UserProfile
-    
+
     @State private var email: String = ""
     @Binding var alertItem: AlertItem?
-    
+
     var body: some View {
         VStack {
             TextField("Email", text: $email)
                 .padding(6)
                 .border(Color.gray.opacity(0.2))
-            
-            Button(action: { sendEmailLink() } ) {
+
+            Button(action: { sendEmailLink() }) {
                 Text("Send Link")
             }
             .padding(.top)
         }
         .padding()
     }
-    
+
     func sendEmailLink() {
         userProfile.sendSignInLink(withEmail: email) { (error) in
             if let error = error {
