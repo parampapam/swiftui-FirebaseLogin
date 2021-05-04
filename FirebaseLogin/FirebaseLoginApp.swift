@@ -36,10 +36,4 @@ struct FirebaseLoginApp: App {
                     .environmentObject(userProfile)
         }
     }
-
-    init() {
-        // Firebase initialization will be here and not in UserProfile.init() so that previews does not crash due
-        // to Firebase reinitialization
-        FirebaseApp.configure()
-    }
 }

@@ -13,7 +13,7 @@ struct LoginKindButtonStyle: ButtonStyle {
         configuration.label
                 .font(.body.weight(.semibold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .frame(height: 44)
                 .foregroundColor(foregroundColor)
                 .background(backgroundColor.cornerRadius(6))
     }

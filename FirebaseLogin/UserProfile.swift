@@ -6,6 +6,7 @@ import Foundation
 import CryptoKit
 import Firebase
 import AuthenticationServices
+import GoogleSignIn
 
 
 class UserProfile: ObservableObject {
@@ -24,13 +25,42 @@ class UserProfile: ObservableObject {
     private var auth: Auth
     private var handler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
+    private var googleDelegate: GoogleDelegate?
 
     enum SignInError: Error {
         case invalidState(String)
         case noToken(String)
     }
 
+    class GoogleDelegate: NSObject, GIDSignInDelegate {
+
+        var completion: ((Error?) -> Void)?
+
+        override init() {
+            super.init()
+
+            // Initialize sing in with Google
+            GIDSignIn.sharedInstance().clientID = FirebaseApp.app()?.options.clientID
+            GIDSignIn.sharedInstance().delegate = self
+        }
+
+        func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+            if let error = error {
+                completion?(error)
+                return
+            }
+
+            let credential = GoogleAuthProvider.credential(withIDToken: user.authentication.idToken, accessToken: user.authentication.accessToken)
+            Auth.auth().signIn(with: credential) { (_, error) in
+                self.completion?(error)
+            }
+        }
+    }
+
     init() {
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
         auth = Auth.auth()
 
         // Set login and logout handler for refreshes user data
@@ -152,33 +182,40 @@ class UserProfile: ObservableObject {
     }
 
     // Login with AppleID: complete of an authorization attempt
-    func signIn(with appleIDCredential: ASAuthorizationAppleIDCredential, complition: @escaping (Error?) -> Void ) {
+    func signIn(with appleIDCredential: ASAuthorizationAppleIDCredential, completion: @escaping (Error?) -> Void) {
         guard let nonce = currentNonce else {
-            complition(SignInError.invalidState("Invalid state: A login callback was received, but no login request was sent."))
+            completion(SignInError.invalidState("Invalid state: A login callback was received, but no login request was sent."))
             return
         }
         guard let appleIDToken = appleIDCredential.identityToken else {
-            complition(SignInError.invalidState("Invalid state: A login callback was received, but no login request was sent."))
+            completion(SignInError.invalidState("Invalid state: A login callback was received, but no login request was sent."))
             return
         }
         guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-            complition(SignInError.noToken("Unable to serialize token string from data: \(appleIDToken.debugDescription)"))
+            completion(SignInError.noToken("Unable to serialize token string from data: \(appleIDToken.debugDescription)"))
             return
         }
 
         let credential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
         Auth.auth().signIn(with: credential) { (_, error) in
-            if error != nil {
-                // Error. If error.code == .MissingOrInvalidNonce, make sure
-                // you're sending the SHA256-hashed nonce as a hex string with
-                // your request to Apple.
-                print(error?.localizedDescription as Any)
-                return
-            }
+            completion(error)
         }
+    }
+
+
+    // Login with Google
+    func signInWithGoogle(completion: @escaping (Error?) -> Void) {
+        if googleDelegate == nil {
+            googleDelegate = GoogleDelegate()
+        }
+        googleDelegate!.completion = completion
+        GIDSignIn.sharedInstance().presentingViewController = UIApplication.shared.windows.first?.rootViewController
+        GIDSignIn.sharedInstance()?.signIn()
     }
 }
 
+
+// Support a description for UserProfile.SignInError
 extension UserProfile.SignInError: LocalizedError {
     public var errorDescription: String? {
         switch self {

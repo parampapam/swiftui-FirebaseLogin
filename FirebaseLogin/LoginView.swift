@@ -8,10 +8,14 @@
 
 import SwiftUI
 import AuthenticationServices
+import GoogleSignIn
+
 
 struct LoginView: View {
 
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var userProfile: UserProfile
+
     @State private var alertItem: AlertItem?
     @State private var showLoginWithEmailAndPassword = false
     @State private var showLoginByEmailLink = false
@@ -22,7 +26,7 @@ struct LoginView: View {
         if userProfile.signedIn {
             UserView()
         } else {
-            VStack {
+            VStack(spacing: 14) {
                 Text("Firebase Login\nSample")
                         .font(.largeTitle.weight(.bold))
                         .multilineTextAlignment(.center)
@@ -31,7 +35,7 @@ struct LoginView: View {
                 Spacer()
 
                 Text("Sign in")
-                        .font(.title3.weight(.semibold))
+                        .font(.title2.weight(.semibold))
                         .padding(.bottom, 18)
 
                 Button(action: { showLoginWithEmailAndPassword = true }) {
@@ -39,7 +43,7 @@ struct LoginView: View {
                 }
                         .buttonStyle(LoginKindButtonStyle(backgroundColor: .orange, foregroundColor: .white))
                         .sheet(isPresented: $showLoginWithEmailAndPassword) {
-                            CredentialPageView(title: "Login to Firebird\nwith Email and Password", showing: $showLoginWithEmailAndPassword) {
+                            CredentialPageView(title: "Login to Firebird\nwith Email and Password", showing: $showLoginWithEmailAndPassword) { am in
                                 CustomTextField(label: "Email", placeholder: "Mandatory", value: $email)
                                         .disableAutocorrection(true)
                                         .autocapitalization(.none)
@@ -51,15 +55,12 @@ struct LoginView: View {
 
                                 Button(action: {
                                     userProfile.signIn(withEmail: email, password: password) { error in
-                                        if let error = error {
-                                            alertItem = AlertItem(title: "Login with Password Error", message: error.localizedDescription)
-                                        }
+                                        am.setAlert(title: "Login with Password", error: error)
                                     }
                                 }) {
                                     Text("Login")
                                 }
                                         .buttonStyle(CredentialButtonStyle())
-
                             }
                         }
 
@@ -68,7 +69,7 @@ struct LoginView: View {
                 }
                         .buttonStyle(LoginKindButtonStyle(backgroundColor: .green, foregroundColor: .white))
                         .sheet(isPresented: $showLoginByEmailLink) {
-                            CredentialPageView(title: "Login to Firebase\nby Email Link", showing: $showLoginByEmailLink) {
+                            CredentialPageView(title: "Login to Firebase\nby Email Link", showing: $showLoginByEmailLink) { am in
                                 CustomTextField(label: "Email", placeholder: "Mandatory", value: $email)
                                         .disableAutocorrection(true)
                                         .autocapitalization(.none)
@@ -76,10 +77,8 @@ struct LoginView: View {
                                         .padding(.bottom, 44)
 
                                 Button(action: {
-                                    userProfile.sendSignInLink(withEmail: email) { (error) in
-                                        if let error = error {
-                                            alertItem = AlertItem(title: "Login by Link Error", message: error.localizedDescription)
-                                        }
+                                    userProfile.sendSignInLink(withEmail: email) { error in
+                                        am.setAlert(title: "Login by Link", error: error)
                                     }
                                 }) {
                                     Text("Send Link")
@@ -87,6 +86,21 @@ struct LoginView: View {
                                         .buttonStyle(CredentialButtonStyle())
                             }
                         }
+
+                Button(action: {
+                    userProfile.signInWithGoogle { error in
+                        alertItem = AlertItem(title: "Sign in with Google", error: error)
+                    }
+                }) {
+                    HStack {
+                        Image(colorScheme == .dark ? "Google Dark Normal" : "Google Light Normal")
+                                .resizable()
+                                .frame(width: 30, height: 30)
+                        Text("Sign in with Google")
+                    }
+                }
+                        .buttonStyle(LoginKindButtonStyle(backgroundColor: .blue, foregroundColor: .white))
+
 
                 SignInWithAppleButton(.continue,
                         onRequest: { request in
@@ -98,18 +112,17 @@ struct LoginView: View {
                                 switch authResults.credential {
                                 case let appleIDCredential as ASAuthorizationAppleIDCredential:
                                     userProfile.signIn(with: appleIDCredential) { error in
-                                        if let error = error {
-                                            alertItem = AlertItem(title: "Login with Apple Error", message: error.localizedDescription)
-                                        }
+                                        alertItem = AlertItem(title: "Login with Apple", error: error)
                                     }
                                 default:
-                                    alertItem = AlertItem(title: "Login with Apple Error", message: "Oops! Something went wrong.")
+                                    alertItem = AlertItem(title: "Login with Apple", message: "Oops! Something went wrong.")
                                 }
                             case .failure(let error):
-                                alertItem = AlertItem(title: "Login with Apple Error", message: error.localizedDescription)
+                                alertItem = AlertItem(title: "Login with Apple", error: error)
                             }
                         }
                 )
+                        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black) // TODO: if the color scheme changes when app is open, the button appearance does not change. Need to fix it.
                         .frame(height: 44)
 
                 Spacer()
@@ -123,7 +136,7 @@ struct LoginView: View {
                         }
                     }
                     .alert(item: $alertItem) {
-                        Alert(title: Text($0.title), message: Text($0.message), dismissButton: .default(Text("Close")))
+                        $0.alert
                     }
         }
     }
