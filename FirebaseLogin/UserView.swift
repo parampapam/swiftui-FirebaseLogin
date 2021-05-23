@@ -11,6 +11,8 @@ struct UserView: View {
 
     @EnvironmentObject private var userProfile: UserProfile
 
+    @State private var alertItem: AlertItem?
+
     var body: some View {
         VStack {
             Text("Firebase Login\nSample")
@@ -39,7 +41,11 @@ struct UserView: View {
 
             Spacer()
 
-            Button(action: { userProfile.signOut() }) {
+            Button(action: {
+                userProfile.signOut() { error in
+                    alertItem = AlertItem(title: "Sign Out", error: error)
+                }
+            }) {
                 Text("Sign Out")
             }
                     .padding(.top)

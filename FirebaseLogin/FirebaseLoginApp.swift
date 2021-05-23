@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Firebase
+import FBSDKCoreKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -19,6 +20,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
         Bundle(path: injectionBundlePath)?.load()
         #endif
+
+        ApplicationDelegate.shared.application(
+                application,
+                didFinishLaunchingWithOptions: launchOptions
+        )
+
         return true
     }
 }
@@ -34,6 +41,13 @@ struct FirebaseLoginApp: App {
         WindowGroup {
             LoginView()
                     .environmentObject(userProfile)
+                    .onOpenURL { url in
+                        ApplicationDelegate.shared.application(UIApplication.shared, open: url, sourceApplication: nil, annotation: UIApplication.OpenURLOptionsKey.annotation)
+                    }
         }
+    }
+
+    init() {
+        FirebaseApp.configure()
     }
 }

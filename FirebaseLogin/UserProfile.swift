@@ -7,6 +7,8 @@ import CryptoKit
 import Firebase
 import AuthenticationServices
 import GoogleSignIn
+import FBSDKCoreKit
+import FBSDKLoginKit
 
 
 class UserProfile: ObservableObject {
@@ -45,13 +47,15 @@ class UserProfile: ObservableObject {
         }
 
         func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
-            if let error = error {
-                completion?(error)
+            guard error == nil else {
+                if (error as NSError).code != GIDSignInErrorCode.canceled.rawValue {
+                    completion?(error)
+                }
                 return
             }
 
             let credential = GoogleAuthProvider.credential(withIDToken: user.authentication.idToken, accessToken: user.authentication.accessToken)
-            Auth.auth().signIn(with: credential) { (_, error) in
+            Auth.auth().signIn(with: credential) { (result, error) in
                 self.completion?(error)
             }
         }
@@ -122,12 +126,14 @@ class UserProfile: ObservableObject {
 
 
     // User logout
-    func signOut() {
+    func signOut(completion: @escaping (Error?) -> Void) {
+        var signOutError: Error?
         do {
             try auth.signOut()
-        } catch let signOutError as NSError {
-            print("Error signing out: %@", signOutError)
+        } catch {
+            signOutError = error
         }
+        completion(signOutError)
     }
 
 
@@ -197,7 +203,7 @@ class UserProfile: ObservableObject {
         }
 
         let credential = OAuthProvider.credential(withProviderID: "apple.com", idToken: idTokenString, rawNonce: nonce)
-        Auth.auth().signIn(with: credential) { (_, error) in
+        auth.signIn(with: credential) { (_, error) in
             completion(error)
         }
     }
@@ -211,6 +217,33 @@ class UserProfile: ObservableObject {
         googleDelegate!.completion = completion
         GIDSignIn.sharedInstance().presentingViewController = UIApplication.shared.windows.first?.rootViewController
         GIDSignIn.sharedInstance()?.signIn()
+    }
+
+
+    // Login with Facebook
+    func signInWithFB(completion: @escaping (Error?) -> Void) {
+
+        let fbLoginManager = LoginManager()
+        fbLoginManager.logIn(permissions: ["public_profile", "email"], from: nil) { (result, error) in
+            if result?.isCancelled ?? false {
+                return
+            }
+
+            guard error == nil else {
+                completion(error)
+                return
+            }
+
+            guard let accessToken = AccessToken.current else {
+                completion(SignInError.noToken("Failed to get token: \(AccessToken.debugDescription())"))
+                return
+            }
+
+            let credential = FacebookAuthProvider.credential(withAccessToken: accessToken.tokenString)
+            self.auth.signIn(with: credential) { (_, error) in
+                completion(error)
+            }
+        }
     }
 }
 

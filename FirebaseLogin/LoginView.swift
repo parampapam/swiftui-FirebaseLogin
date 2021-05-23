@@ -9,6 +9,8 @@
 import SwiftUI
 import AuthenticationServices
 import GoogleSignIn
+import FBSDKCoreKit
+import FBSDKLoginKit
 
 
 struct LoginView: View {
@@ -86,6 +88,22 @@ struct LoginView: View {
                                         .buttonStyle(CredentialButtonStyle())
                             }
                         }
+                
+                Button(action: {
+                    userProfile.signInWithFB { error in
+                        alertItem = AlertItem(title: "Sign in with Facebook", error: error)
+                    }
+                } ) {
+                    HStack {
+                        Image("FB Logo White")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+//                            .renderingMode(.none)
+                            .frame(width: 22, height: 22)
+                        Text("Login with Facebook")
+                    }
+                }
+                        .buttonStyle(LoginKindButtonStyle(backgroundColor: Color("FB Background"), foregroundColor: .white))
 
                 Button(action: {
                     userProfile.signInWithGoogle { error in
@@ -99,7 +117,7 @@ struct LoginView: View {
                         Text("Sign in with Google")
                     }
                 }
-                        .buttonStyle(LoginKindButtonStyle(backgroundColor: .blue, foregroundColor: .white))
+                        .buttonStyle(LoginKindButtonStyle(backgroundColor: Color("Google Background"), foregroundColor: .white))
 
 
                 SignInWithAppleButton(.continue,
@@ -124,15 +142,14 @@ struct LoginView: View {
                 )
                         .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black) // TODO: if the color scheme changes when app is open, the button appearance does not change. Need to fix it.
                         .frame(height: 44)
+                
 
                 Spacer()
             }
                     .padding(8)
                     .onOpenURL { url in
                         userProfile.signIn(url: url) { error in
-                            if let error = error {
-                                alertItem = AlertItem(title: "Error", message: error.localizedDescription)
-                            }
+                            alertItem = AlertItem(title: "Error", error: error)
                         }
                     }
                     .alert(item: $alertItem) {
@@ -155,3 +172,5 @@ class MainView_Previews: PreviewProvider {
     }
     #endif
 }
+
+
